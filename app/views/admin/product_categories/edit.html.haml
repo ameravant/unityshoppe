@@ -1,0 +1,6 @@
+- content_for(:title) { concat "Edit #{@product_category.name}" }
+%h1
+  = yield :title
+- form_for [:admin, @product_category], :html => { :method => :put, :onsubmit => "form_submitted()", :multipart => true } do |f|
+  = render :partial => "form", :locals => { :f => f }
+

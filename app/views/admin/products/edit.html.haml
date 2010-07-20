@@ -1,0 +1,9 @@
+- content_for(:title) { concat "Edit #{@product.name}" }
+%h1
+  = yield :title
+%p
+  = icon "Photo"
+  = link_to "Manage images for this product", admin_product_path(@product)
+- form_for [:admin, @product], :html => { :method => :put, :onsubmit => "form_submitted()" } do |f|
+  = render :partial => "form", :locals => { :f => f }
+
