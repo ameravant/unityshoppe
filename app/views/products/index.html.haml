@@ -1,4 +1,4 @@
-- content_for(:meta_title) { concat "Store" }
+- content_for(:meta_title) { concat "Donations" }
 / Add google cart here if needed
 -if @cms_config["site_settings"]["google_merchant_id"]
   /Add this line to the script tag to enable sandbox testing
@@ -6,6 +6,6 @@
     ==<script id="googlecart-script" type="text/javascript" src="http://checkout.google.com/seller/gsc/v2/cart.js?mid=#{@cms_config["site_settings"]["google_merchant_id"]}" post-to-sandbox="#{RAILS_ENV=="development"}" currency="USD"></script>
 = render :partial => "sidecolumn2"
 %h1
-  Products
+  Donate
 %ul.product-list
   =render :partial => "product", :collection => @products.collect{|p| p.active ? p : ""}
