@@ -2,7 +2,7 @@ class Admin::ProductsController < AdminController
   unloadable
   before_filter :find_product, :only => [ :edit, :update, :show, :destroy, :reorder ]
   before_filter :find_categories, :only => [ :edit, :new, :update ]
-  add_breadcrumb "Donations", nil
+  add_breadcrumb "Products", nil
 
   def index
     @products = Product.all.paginate(:page => params[:page], :per_page => 25)

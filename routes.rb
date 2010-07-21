@@ -1,5 +1,5 @@
 resources :stores, :cart_items, :shipping_addresses, :billing_addresses, :orders, :retailers
-resources :products, :as => "donations" :has_many => [ :images, :testimonials ], :member => { :add_to_cart => :put }
+resources :products, :as => "donations", :has_many => [ :images, :testimonials ], :member => { :add_to_cart => :put }
 resources :product_categories
 resources :checkouts
 resource :cart
@@ -15,9 +15,3 @@ namespace :admin do |admin|
       product.resources :testimonials
     end
 end
-
-store '/store', :controller => 'products'
-products '/products', :controller => 'products'
-shipping '/shipping', :controller => "shipping_addresses", :action => "new"
-billing '/billing', :controller => "billing_addresses", :action => "new"
-checkout '/checkout', :controller => "orders", :action => "new"
