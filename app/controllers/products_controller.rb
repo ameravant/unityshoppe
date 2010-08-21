@@ -1,11 +1,15 @@
 class ProductsController < ApplicationController
   unloadable
   add_breadcrumb 'Home', 'root_path'
-
+  require "net/http"
+  require "uri"
+  require "base64"
+  require 'HTTParty'  
+	
 	before_filter :find_page
 
   def index
-    @products = Product.find (:all, :conditions => {:active => true})
+    @products = Product.find(:all, :conditions =>{:active => true})
     @heading = "Product"
     add_breadcrumb 'Product'
   end
@@ -41,7 +45,25 @@ class ProductsController < ApplicationController
       redirect_to products_path
     end
   end
+  
+  def google_post
+    google_params = { "_type"=>"checkout-shopping-cart", "shopping-cart.items.item-1.item-name" => params["product-attr-option"], "shopping-cart.items.item-1.item-description" => params["product-title"],"shopping-cart.items.item-1.unit-price" => params["product-price"], "shopping-cart.items.item-1.unit-price.currency" => "USD","shopping-cart.items.item-1.quantity" => "1","shopping-cart.items.item-1.merchant-item-id" =>"UNITYDONATION"}
+    @cms_config = YAML::load_file("#{RAILS_ROOT}/config/cms.yml")
+    base_uri = RAILS_ENV == "production" ? 'https://google.com' : 'https://sandbox.google.com'
+    headers = {'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8'}
+    options = { :body => google_params, :headers => headers , :basic_auth => {:username => @cms_config["site_settings"]["google_merchant_id"],:password => @cms_config["site_settings"]["google_merchant_key"]}}
+    response = HTTParty.post(base_uri+"/checkout/api/checkout/v2/requestForm/Merchant/#{@cms_config["site_settings"]["google_merchant_id"]}", options)
 
+    redirect_url = URI.decode(response.parsed_response).strip.gsub(/_type=checkout-redirect&redirect-url=(.{0,}?)\z/,'\1')
+    # Need to save serial number that comes back from the order and get person info 
+    # Person.find_or_create_by_email
+    redirect_to(redirect_url)
+  end
+  
+  def google_callback
+    
+  end
+  
   def add_to_cart
     begin
       @product = Product.find params[:id], :conditions => { :active => true, :deleted => false }
@@ -57,7 +79,7 @@ class ProductsController < ApplicationController
 
   def find_page
     @footer_pages = Page.find(:all, :conditions => {:show_in_footer => true}, :order => :footer_pos )
-    @page = Page.find_by_permalink!('products')
+    @page = Page.find_by_permalink!('donations')
     @productcategories = ProductCategory.all
     @topproductcategories = ProductCategory.all(:conditions => {:parent_id => nil})
     # @product_category_tmp = []

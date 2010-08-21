@@ -15,3 +15,6 @@ namespace :admin do |admin|
       product.resources :testimonials
     end
 end
+
+googlepost "/googlepost", :controller => "products", :action => "google_post"
+googleresponse "/googleresponse", :controller => "products", :action => "google_response"

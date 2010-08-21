@@ -21,10 +21,8 @@
         %li= link_to "Newsletters", admin_newsletters_path, :id => "admin-newsletters" if current_user.has_role(@permissions['newsletters'])
       - if @cms_config['modules']['links']
         %li= link_to @cms_config['site_settings']['links_title'], admin_links_path, :id => "admin-links" if current_user.has_role(@permissions['links'])
-      - if @cms_config['modules']['product']
-        %li= link_to "Donations", admin_donations_path, :id => "admin-product" if current_user.has_role(@permissions['products'])
-        - if @cms_config['modules']['store'] and  Rails.env.development?
-          %li= link_to "Orders", admin_orders_path, :id => "admin-order" if current_user.has_role(@permissions['orders'])
+      %li= link_to "Donations", admin_products_path, :id => "admin-product"
+      / %li= link_to "Donations Received", admin_products_path, :id => "admin-product"
       %li= link_to "Inquiries", admin_inquiries_path, :id => "admin-inquiries" if current_user.has_role(@permissions['inquiries'])
       %li= link_to "Settings", edit_admin_setting_path, :id => "admin-settings" if current_user.has_role(@permissions['settings'])
   .signout

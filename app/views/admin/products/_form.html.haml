@@ -8,18 +8,6 @@
     %dd.form-option
       = f.text_field :title, :class => "big"
     %dt.form-label
-      Product SKU:
-    %dd.form-option
-      = f.text_field :sku
-    %dt.form-label
-      = f.label :featured, "Feature on main products page."
-    %dd.form-option
-      = f.check_box :featured
-    %dt.form-label
-      = f.label :display_add_cart, "Display add to cart button."
-    %dd.form-option
-      = f.check_box :display_add_cart
-    %dt.form-label
       = f.label :active, "Active"
     %dd.form-option
       = f.check_box :active
@@ -32,14 +20,8 @@
     %dd.form-option
       = f.text_area :description, :size => "75x15", :class => "mceEditor"
     %dt.form-label
-      Add to Cart Code:
-    %dd.form-option
-      = f.text_area :cart_code, :size => "50x5"
-      %p.small.gray
-        If you are using a third party shopping cart, paste the generated "Add to Cart" code here.
-    %dt.form-label
       .product_options{:id => "product_options"}
-        Product Options
+        Donation Options
         -if !@product.product_options.empty?
           = render :partial => 'product_option', :collection => @product.product_options 
         -else
@@ -47,22 +29,10 @@
       = add_product_option_link "Add option"
     - unless @product_categories.empty?
       %dt.form-label
-        Product Category:
+        Donation Category:
       %dd.form-option
         - build_form_children(nil, @product)  
 
   - fancy_submit admin_products_path do
-    = f.submit "Save Product"
-      
-  .form-option
-    %h2
-      Related Products
-    - @products.each do |p|
-      %div
-        %label{ :for => dom_id(p), :style => "width:250px;"}
-          = h p.name.titleize
-        = check_box_tag "product[related_product_ids][]", p.id, @product.related_products.include?(p), :id => dom_id(p)    
-      =clear
-  - fancy_submit admin_products_path do
-    = f.submit "Save Product"
+    = f.submit "Save Donation"
 

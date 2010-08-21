@@ -1,0 +1,134 @@
+- form_for [:admin, @person], :html => {:multipart => true} do |f|
+  - fields_for @profile do |p|
+    %fieldset
+      %div{:style => "width: 500px; float: left; margin: 0 40px 0 0;"}
+        - if CMS_CONFIG['modules']['profiles']
+          %div{:style => "float: right; "}
+            = p.check_box :public
+            = p.label :public, "Show Public Profile"
+        %h2 Basic Info
+        %dl
+          %dt.form-label= f.label :first_name
+          %dd.form-option= f.text_field :first_name, :size => "44"
+          %dt.form-label= f.label :last_name
+          %dd.form-option= f.text_field :last_name, :size => "44" 
+          %dt.form-label= f.label :email
+          %dd.form-option
+            = f.text_field :email, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_email
+                = p.label :show_email, "Display Publicly"
+          %dt.form-label= f.label :phone
+          %dd.form-option
+            = f.text_field :phone, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_phone
+                = p.label :show_phone, "Display Publicly"
+          %dt.form-label= f.label :web_address
+          %dd.form-option
+            = f.text_field :web_address, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_web_address
+                = p.label :show_web_address, "Display Publicly"
+        %h2 Additional Contact Info
+
+        %dl
+          - if CMS_CONFIG['modules']['profiles']
+            %dt.form-label= f.label :avatar, "Upload a photo for your profile"
+            %dd.form-option= f.file_field :avatar
+            %dt.form-label= f.label :notes, "Additional Information"
+            %dd.form-option= f.text_area :notes, :size => "70x10"
+          %dt.form-label= f.label :company
+          %dd.form-option
+            = f.text_field :company, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_company
+                = p.label :show_company, "Display Publicly"
+          %dt.form-label= f.label :title
+          %dd.form-option
+            = f.text_field :title, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_title
+                = p.label :show_title, "Display Publicly"
+          %dt.form-label= f.label :address1
+          %dd.form-option
+            = f.text_field :address1, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_address1
+                = p.label :show_address2, "Display Publicly"
+          %dt.form-label= f.label :address2
+          %dd.form-option
+            = f.text_field :address2, :size => "44" 
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_address2
+                = p.label :show_address2, "Display Publicly"
+          %dt.form-label= f.label :city
+          %dd.form-option
+            = f.text_field :city, :size => "44"
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_city
+                = p.label :show_city, "Display Publicly"
+          %dt.form-label= f.label :state
+          %dd.form-option
+            = select :person, :state, [['Select a State', 'None'], ['Alabama', 'AL'], ['Alaska', 'AK'], ['Arizona', 'AZ'], ['Arkansas', 'AR'], ['California', 'CA'], ['Colorado', 'CO'], ['Connecticut', 'CT'], ['Delaware', 'DE'], ['District of Columbia', 'DC'], ['Florida', 'FL'], ['Georgia', 'GA'], ['Hawaii', 'HI'], ['Idaho', 'ID'], ['Illinois', 'IL'], ['Indiana', 'IN'], ['Iowa', 'IA'], ['Kansas', 'KS'], ['Kentucky', 'KY'], ['Louisiana', 'LA'], ['Maine', 'ME'], ['Maryland', 'MD'], ['Massachusetts', 'MA'], ['Michigan', 'MI'], ['Minnesota', 'MN'], ['Mississippi', 'MS'], ['Missouri', 'MO'], ['Montana', 'MT'], ['Nebraska', 'NE'], ['Nevada', 'NV'], ['New Hampshire', 'NH'], ['New Jersey', 'NJ'], ['New Mexico', 'NM'], ['New York', 'NY'], ['North Carolina', 'NC'], ['North Dakota', 'ND'], ['Ohio', 'OH'], ['Oklahoma', 'OK'], ['Oregon', 'OR'], ['Pennsylvania', 'PA'], ['Rhode Island', 'RI'], ['South Carolina', 'SC'], ['South Dakota', 'SD'], ['Tennessee', 'TN'], ['Texas', 'TX'], ['Utah', 'UT'], ['Vermont', 'VT'], ['Virginia', 'VA'], ['Washington', 'WA'], ['Wisconsin', 'WI'], ['West Virginia', 'WV'], ['Wyoming', 'WY']]
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_state
+                = p.label :show_state, "Display Publicly"
+          %dt.form-label= f.label :zip
+          %dd.form-option
+            = f.text_field :zip, :size => "44"
+            - if CMS_CONFIG['modules']['profiles']
+              .display-option
+                = p.check_box :show_zip
+                = p.label :show_zip, "Display Publicly"
+        -if !@person.donations.blank? 
+          %h2 Donations
+            -@person.donations.split(",").each do |d|
+              =d
+              %br              
+        %h2 Groups
+        -for group in @groups
+          - unless group.is_event_registration_group
+            .person_group_form
+              = check_box_tag "person[person_group_ids][]", group.id, @person.person_groups.include?(group), :id => "group_checkbox_#{group.id}"
+              = label_tag "group_checkbox_#{group.id}", group.title
+              %div{:class => "small gray"}== &mdash; #{group.description}
+          = cycle(nil,nil,clear)
+      %div{:style => "float: left; border-left: 1px solid #ccc; padding-left: 40px; width: 260px"}
+        %h2= large_icon('Lock Open') + ' ' + "Login Settings"
+        %dl
+          %dt.form-label= label 'user', 'login'
+          %dd.form-option= text_field 'user', 'login'
+          %dt.form-label= label 'user', 'password'
+          %dd.form-option= password_field 'user', 'password'
+          %dt.form-label= label 'user', 'password_confirmation'
+          %dd.form-option= password_field 'user', 'password_confirmation'
+        - if current_user.has_role(["Admin"])
+          %h2 Role Groups
+          -for group in @role_groups
+            .person_group_form
+              - unless @person.user == current_user and group.title == "Admin"
+                = check_box_tag "person[person_group_ids][]", group.id, @person.person_groups.include?(group), :id => "group_checkbox_#{group.id}"
+              - else
+                = check_box_tag "person[person_group_ids][]", group.id, @person.person_groups.include?(group), :id => "group_checkbox_#{group.id}", :readonly => true
+              = label_tag "group_checkbox_#{group.id}", group.title
+              %div{:class => "small gray"}== &mdash; #{group.description}
+            = cycle(nil,nil,clear)
+      = clear
+      %br
+      =f.submit "Update Profile"
+
+  %style{:type => "text/css"}
+    div.display-option { float: right; font-size: .9em; }
+    div.display-option input { display: inline !important; }
+    div.display-option label { display: inline !important; margin: 0; width: 100px; float: none; }
+    div.small.gray { font-size: .9em; font-color: #999; display: inline; }
