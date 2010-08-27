@@ -9,10 +9,8 @@ class ProductsRedux < ActiveRecord::Migration
     remove_column :products, :product_line_id
     remove_column :products, :price
     remove_column :products, :sale_price
-    add_column :people, :donations, :string
   end
   def self.down
-    remove_column :people, :donations
     add_column :products, :sale_price, :float
     add_column :products, :price, :float
     rename_column :products, :title, :name

@@ -1,17 +1,19 @@
 class ProductsController < ApplicationController
   unloadable
   add_breadcrumb 'Home', 'root_path'
-  require "net/http"
-  require "uri"
-  require "base64"
-  require 'HTTParty'  
-	
+  # require "net/http"
+  # require "uri"
+  # require "base64"
+  require 'HTTParty'
+  require 'rufus/scheduler'
 	before_filter :find_page
-
+  skip_before_filter :verify_authenticity_token, :only => :google_response
+  
   def index
-    @products = Product.find(:all, :conditions =>{:active => true})
-    @heading = "Product"
-    add_breadcrumb 'Product'
+    # @products = Product.find(:all, :conditions =>{:active => true})
+    # @heading = "Product"
+    # add_breadcrumb 'Product'
+    redirect_to(product_path(Product.first))
   end
 
   def show
@@ -47,6 +49,7 @@ class ProductsController < ApplicationController
   end
   
   def google_post
+    if !params["product-price"].blank?
     google_params = { "_type"=>"checkout-shopping-cart", "shopping-cart.items.item-1.item-name" => params["product-attr-option"], "shopping-cart.items.item-1.item-description" => params["product-title"],"shopping-cart.items.item-1.unit-price" => params["product-price"], "shopping-cart.items.item-1.unit-price.currency" => "USD","shopping-cart.items.item-1.quantity" => "1","shopping-cart.items.item-1.merchant-item-id" =>"UNITYDONATION"}
     @cms_config = YAML::load_file("#{RAILS_ROOT}/config/cms.yml")
     base_uri = RAILS_ENV == "production" ? 'https://google.com' : 'https://sandbox.google.com'
@@ -55,13 +58,42 @@ class ProductsController < ApplicationController
     response = HTTParty.post(base_uri+"/checkout/api/checkout/v2/requestForm/Merchant/#{@cms_config["site_settings"]["google_merchant_id"]}", options)
 
     redirect_url = URI.decode(response.parsed_response).strip.gsub(/_type=checkout-redirect&redirect-url=(.{0,}?)\z/,'\1')
+    
     # Need to save serial number that comes back from the order and get person info 
     # Person.find_or_create_by_email
     redirect_to(redirect_url)
+    else
+      flash[:error] = "Please enter a valid donation amount"
+      redirect_to(products_path)
+    end
   end
   
-  def google_callback
-    
+  def google_response
+    if params["serial-number"]
+      options = {:body => {"_type" => "notification-history-request", "serial-number" => params["serial-number"]}, :headers => {'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8'},:basic_auth => {:username =>  @cms_config["site_settings"]["google_merchant_id"],:password => @cms_config["site_settings"]["google_merchant_key"]}}
+      uri = RAILS_ENV == "production" ? 'https://checkout.google.com/api/checkout/v2/reportsForm/Merchant/' : 'https://sandbox.google.com/checkout/api/checkout/v2/reportsForm/Merchant/'
+      response = HTTParty.post(base_uri+"#{@cms_config["site_settings"]["google_merchant_id"]}", options)
+      response_hash = CGI.parse(response.parsed_response)
+      #If the request is of _type new-order-notification then it has the info we want
+      if response_hash["_type"] == "new-order-notification"
+        gs = GoogleSerial.create(:serial => params["serial-number"])
+        person = Person.find_or_create_by_email(response_hash["buyer-billing-address.email"].to_s)
+        person.first_name = response_hash["buyer-billing-address.contact-name"].to_s.split(" ")[0]
+        person.last_name = response_hash["buyer-billing-address.contact-name"].to_s.split(" ")[1]
+        person.zip = response_hash["buyer-billing-address.postal-code"].to_s
+        person.address1 = response_hash["buyer-billing-address.address1"].to_s
+        person.address2 = response_hash["buyer-billing-address.address2"].to_s
+        person.city = response_hash["buyer-billing-address.city"].to_s
+        person.state = response_hash["buyer-billing-address.state"].to_s
+        person.phone = response_hash["buyer-billing-address.phone"].to_s
+        person.save
+        person.google_serial_ids |= [gs]
+        groups = [PersonGroup.find_by_title("Donations").id]
+        groups << PersonGroup.find_by_title("Newsletter").id if response_hash["buyer-marketing-preferences.email-allowed"]      
+        person.person_group_ids |= groups
+        person.save      
+      end
+    end
   end
   
   def add_to_cart

@@ -1,3 +1,4 @@
+alsdjfjakl
 - form_for [:admin, @person], :html => {:multipart => true} do |f|
   - fields_for @profile do |p|
     %fieldset
@@ -90,10 +91,10 @@
               .display-option
                 = p.check_box :show_zip
                 = p.label :show_zip, "Display Publicly"
-        -if !@person.donations.blank? 
+        -if !@person.google_serials.blank?
           %h2 Donations
-            -@person.donations.split(",").each do |d|
-              =d
+            -@person.google_serials.each do |d|
+              =d.serial
               %br              
         %h2 Groups
         -for group in @groups
