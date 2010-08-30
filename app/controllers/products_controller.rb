@@ -74,6 +74,7 @@ class ProductsController < ApplicationController
       response = HTTParty.post(base_uri+"#{@cms_config["site_settings"]["google_merchant_id"]}", options)
       response_hash = CGI.parse(response.parsed_response)
       #If the request is of _type new-order-notification then it has the info we want
+      logger.info "Creating donation record"
       if response_hash["_type"] == "new-order-notification"
         gs = GoogleSerial.create(:serial => params["serial-number"])
         person = Person.find_or_create_by_email(response_hash["buyer-billing-address.email"].to_s)
@@ -90,7 +91,8 @@ class ProductsController < ApplicationController
         groups = [PersonGroup.find_by_title("Donations").id]
         groups << PersonGroup.find_by_title("Newsletter").id if response_hash["buyer-marketing-preferences.email-allowed"]      
         person.person_group_ids |= groups
-        person.save      
+        person.save
+        logger.info person.id
       end
     end
   end
