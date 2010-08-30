@@ -4,7 +4,7 @@ class ProductsController < ApplicationController
   # require "net/http"
   # require "uri"
   # require "base64"
-  require 'HTTParty'
+  require 'httparty'
   require 'rufus/scheduler'
 	before_filter :find_page
   skip_before_filter :verify_authenticity_token, :only => :google_response
