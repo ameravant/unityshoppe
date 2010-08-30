@@ -70,7 +70,7 @@ class ProductsController < ApplicationController
   def google_response
     if params["serial-number"]
       options = {:body => {"_type" => "notification-history-request", "serial-number" => params["serial-number"]}, :headers => {'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8'},:basic_auth => {:username =>  @cms_config["site_settings"]["google_merchant_id"],:password => @cms_config["site_settings"]["google_merchant_key"]}}
-      uri = @cms_config["site_settings"]["google_sandbox"] ? 'https://sandbox.google.com/checkout/api/checkout/v2/reportsForm/Merchant/' : 'https://checkout.google.com/api/checkout/v2/reportsForm/Merchant/'
+      base_uri = @cms_config["site_settings"]["google_sandbox"] ? 'https://sandbox.google.com/checkout/api/checkout/v2/reportsForm/Merchant/' : 'https://checkout.google.com/api/checkout/v2/reportsForm/Merchant/'
       response = HTTParty.post(base_uri+"#{@cms_config["site_settings"]["google_merchant_id"]}", options)
       response_hash = CGI.parse(response.parsed_response)
       #If the request is of _type new-order-notification then it has the info we want
