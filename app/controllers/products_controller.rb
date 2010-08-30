@@ -74,10 +74,12 @@ class ProductsController < ApplicationController
       response = HTTParty.post(base_uri+"#{@cms_config["site_settings"]["google_merchant_id"]}", options)
       response_hash = CGI.parse(response.parsed_response)
       #If the request is of _type new-order-notification then it has the info we want
-      logger.info "Creating donation record"
+      logger.info response_hash["_type"]
       if response_hash["_type"] == "new-order-notification"
+        logger.info "Making new person"
         gs = GoogleSerial.create(:serial => params["serial-number"])
         person = Person.find_or_create_by_email(response_hash["buyer-billing-address.email"].to_s)
+        logger.info "Person found or created"
         person.first_name = response_hash["buyer-billing-address.contact-name"].to_s.split(" ")[0]
         person.last_name = response_hash["buyer-billing-address.contact-name"].to_s.split(" ")[1]
         person.zip = response_hash["buyer-billing-address.postal-code"].to_s
@@ -87,12 +89,13 @@ class ProductsController < ApplicationController
         person.state = response_hash["buyer-billing-address.state"].to_s
         person.phone = response_hash["buyer-billing-address.phone"].to_s
         person.save
+        logger.info "Person saved"
         person.google_serial_ids |= [gs]
         groups = [PersonGroup.find_by_title("Donations").id]
         groups << PersonGroup.find_by_title("Newsletter").id if response_hash["buyer-marketing-preferences.email-allowed"]      
         person.person_group_ids |= groups
         person.save
-        logger.info person.id
+        logger.info "Created person #{person.id}"
       end
     end
   end
