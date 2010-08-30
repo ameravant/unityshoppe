@@ -75,7 +75,7 @@ class ProductsController < ApplicationController
       response_hash = CGI.parse(response.parsed_response)
       #If the request is of _type new-order-notification then it has the info we want
       logger.info response_hash["_type"]
-      if response_hash["_type"] == "new-order-notification"
+      if response_hash["_type"].to_s == "new-order-notification"
         logger.info "Making new person"
         gs = GoogleSerial.create(:serial => params["serial-number"])
         person = Person.find_or_create_by_email(response_hash["buyer-billing-address.email"].to_s)
