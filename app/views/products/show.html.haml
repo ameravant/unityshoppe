@@ -7,21 +7,17 @@
   - content_for :head do
     ==<script type='text/javascript'>function option_switch (price, option) {if(price != ''){jQuery('.product-price').val(price);}jQuery('.product-attr-option').val(option); return false;}</script>
 
-  - content_for :footer do
-    / ==<script id="googlecart-script" type="text/javascript" src="http://checkout.google.com/seller/gsc/v2/cart.js?mid=#{@cms_config["site_settings"]["google_merchant_id"]}" post-to-sandbox="#{RAILS_ENV=="development"}" currency="USD"></script>
-
 %h1= @product.title
+%h2
+  Description
+= @product.description
+
 = render :partial => "/shared/image_box", :locals => { :owner => @product } unless @product.images.empty?
 - form_tag googlepost_path do
   #pricing
     %div{:class => "add-to-cart product"}
       = hidden_field_tag "product-title", @product.title, {:class => "product-title"}
       = hidden_field_tag "product-attr-option", @product.product_options[0].title ? @product.product_options[0].title : nil, {:class => "product-attr-option"}
-      = "Product SKU: #{@product.sku}<br />" unless @product.sku.blank?
-      = "Weight: #{@product} <br />" unless @product.weight.blank?
-      -if @product.weight
-        %input.product-weight{:type=>"hidden", :value=>"#{@product.weight}"}
-      %br
       %h3= "Donation Amount"
       = text_field_tag "product-price","", {:class => "product-price"}
       %h3= "Donation Options"
@@ -30,25 +26,14 @@
           - @product.product_options.each_with_index do |po, x|
             -if po.available
               =radio_button_tag ("product_options", po.id, x == 0 ? true : false, {:onclick => "option_switch(jQuery('.product-price').val(), \"#{po.title}\")"})
-              =label_tag "product_options_#{po.id}", "#{po.title}&mdash;#{number_to_currency(po.price, :unit => "$")}"
+              =label_tag "product_options_#{po.id}", "#{po.title}"
+              %br
       -else
         = number_to_currency(@product.product_options[0].price)
       - if @cms_config["site_settings"]["google_merchant_id"] and @product.display_add_cart
         %input.image{:type => "image", :src => "http://sandbox.google.com/checkout/buttons/checkout.gif?merchant_id=1234567890&w=180&h=46&style=white&variant=text&loc=en_US", :name => "Google Checkout", :alt => "Fast checkout through Google", :height => "46", :width => "180", :onClick => "submit"}
         / %div.googlecart-add-button{:role=>"button", :alt=>"Add to cart", :tabindex=>"0", :style => "position: relative;"}
     
-%h2
-  Description
-= @product.description
-
-/Related Products
-- unless @product.related_products.blank?
-  %h2
-    Related Products
-  %ul
-    - for product in @product.related_products
-      %li= link_to(product.name, product_path(product))
-
 - unless @testimonial.blank?
   = render :partial => "sidecolumn"
   /= render :partial => "sidecolumn2"
