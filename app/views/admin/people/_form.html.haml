@@ -1,4 +1,3 @@
-alsdjfjakl
 - form_for [:admin, @person], :html => {:multipart => true} do |f|
   - fields_for @profile do |p|
     %fieldset
@@ -92,10 +91,15 @@ alsdjfjakl
                 = p.check_box :show_zip
                 = p.label :show_zip, "Display Publicly"
         -if !@person.google_serials.blank?
-          %h2 Donations
-            -@person.google_serials.each do |d|
-              =d.serial
-              %br              
+          %h2
+            Donations
+          -if @person.anonymous
+            %span{:style => "color:#E00000;"}
+              This donor would like to remain anonymous.
+              %br
+          -@person.google_serials.each do |d|
+            ="#{d.serial} &mdash; #{d.created_at.strftime("%m/%d/%Y")}"
+            %br              
         %h2 Groups
         -for group in @groups
           - unless group.is_event_registration_group

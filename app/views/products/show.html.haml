@@ -21,6 +21,9 @@
       %h3= "Donation Amount"
       = text_field_tag "product-price","", {:class => "product-price"}
       %h3= "Donation Options"
+      = label_tag "anonymous", "I would like to remain anonymous"
+      = check_box_tag "anonymous"
+      
       -if @product.product_options.count > 1
         .options_box
           - @product.product_options.each_with_index do |po, x|

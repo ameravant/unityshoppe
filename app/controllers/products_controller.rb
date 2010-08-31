@@ -50,7 +50,7 @@ class ProductsController < ApplicationController
   
   def google_post
     if !params["product-price"].blank?
-    google_params = { "_type"=>"checkout-shopping-cart", "shopping-cart.items.item-1.item-name" => params["product-attr-option"], "shopping-cart.items.item-1.item-description" => params["product-title"],"shopping-cart.items.item-1.unit-price" => params["product-price"], "shopping-cart.items.item-1.unit-price.currency" => "USD","shopping-cart.items.item-1.quantity" => "1","shopping-cart.items.item-1.merchant-item-id" =>"UNITYDONATION"}
+    google_params = { "_type"=>"checkout-shopping-cart", "shopping-cart.items.item-1.item-name" => params["anonymous"] ? params["product-attr-option"]+"-anonymous" : params["product-attr-option"], "shopping-cart.items.item-1.item-description" => params["product-title"],"shopping-cart.items.item-1.unit-price" => params["product-price"], "shopping-cart.items.item-1.unit-price.currency" => "USD","shopping-cart.items.item-1.quantity" => "1","shopping-cart.items.item-1.merchant-item-id" =>"UNITYDONATION"}
     base_uri = @cms_config["site_settings"]["google_sandbox"] ? 'https://sandbox.google.com' : 'https://google.com'
     headers = {'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8'}
     options = { :body => google_params, :headers => headers , :basic_auth => {:username => @cms_config["site_settings"]["google_merchant_id"],:password => @cms_config["site_settings"]["google_merchant_key"]}}
@@ -88,6 +88,7 @@ class ProductsController < ApplicationController
         person.city = response_hash["buyer-billing-address.city"].to_s
         person.state = response_hash["buyer-billing-address.state"].to_s
         person.phone = response_hash["buyer-billing-address.phone"].to_s
+        person.anonymous = response_hash["shopping-cart.items.item-1.item-name"].to_s.include?("anonymous")
         person.save
         logger.info "Person saved"
         person.google_serial_ids |= [gs]

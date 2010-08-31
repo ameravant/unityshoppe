@@ -1,5 +1,4 @@
 class Person < ActiveRecord::Base
-  unloadable
   has_and_belongs_to_many :person_groups
   has_many :inquiries
   has_one :profile if CMS_CONFIG['modules']['profiles']
