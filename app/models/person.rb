@@ -1,4 +1,5 @@
 class Person < ActiveRecord::Base
+  require "#{RAILS_ROOT}/vendor/plugins/siteninja/siteninja_events/lib/person.rb"
   has_and_belongs_to_many :person_groups
   has_many :inquiries
   has_one :profile if CMS_CONFIG['modules']['profiles']
