@@ -20,7 +20,6 @@ class ProductsController < ApplicationController
     begin
       @menu_selected = "products"
       @product = Product.find params[:id], :conditions => { :active => true, :deleted => false }
-      @product.menus.empty? ? @menu = @page.menus.first : @menu = @product.menus.first
       @heading = @product.name
       @testimonial = Testimonial.find(:all, :conditions => ["quotable_id = ?" , @product.id]).sort_by(&:rand).first #Select a random testimonial
       add_breadcrumb 'Products', 'products_path'
@@ -50,39 +49,18 @@ class ProductsController < ApplicationController
   end
   
   def google_post
-    if params["product-price"].match(/^[\d]*(\.[\d]{1,2})?$/)
-      google_params = { 
-        '_type' => 'checkout-shopping-cart', 
-        'shopping-cart.items.item-1.item-name' => params['anonymous'] ? params['product-attr-option']+'-anonymous' : params['product-attr-option'], 
-        'shopping-cart.items.item-1.item-description' => params['product-title'],
-        'shopping-cart.items.item-1.unit-price' => params['product-price'], 
-        'shopping-cart.items.item-1.unit-price.currency' => 'USD',
-        'shopping-cart.items.item-1.quantity' => '1',
-        'shopping-cart.items.item-1.merchant-item-id' =>'UNITYDONATION'
-        }
-      site_settings = @cms_config["site_settings"]
-      google_merchant_id = site_settings['google_merchant_id']
-      if site_settings['google_sandbox']
-        post_url = "https://sandbox.google.com/checkout/api/checkout/v2/requestForm/Merchant/#{google_merchant_id}"
-      else
-        post_url = "https://checkout.google.com/api/checkout/v2/requestForm/Merchant/#{google_merchant_id}"
-      end
+    if !params["product-price"].blank?
+    google_params = { "_type"=>"checkout-shopping-cart", "shopping-cart.items.item-1.item-name" => params["anonymous"] ? params["product-attr-option"]+"-anonymous" : params["product-attr-option"], "shopping-cart.items.item-1.item-description" => params["product-title"],"shopping-cart.items.item-1.unit-price" => params["product-price"], "shopping-cart.items.item-1.unit-price.currency" => "USD","shopping-cart.items.item-1.quantity" => "1","shopping-cart.items.item-1.merchant-item-id" =>"UNITYDONATION"}
+    base_uri = @cms_config["site_settings"]["google_sandbox"] ? 'https://sandbox.google.com' : 'https://google.com'
+    headers = {'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8'}
+    options = { :body => google_params, :headers => headers , :basic_auth => {:username => @cms_config["site_settings"]["google_merchant_id"],:password => @cms_config["site_settings"]["google_merchant_key"]}}
+    response = HTTParty.post(base_uri+"/checkout/api/checkout/v2/requestForm/Merchant/#{@cms_config["site_settings"]["google_merchant_id"]}", options)
 
-      headers = { 'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8' }
-      options = { :body => google_params, :headers => headers, 
-        :basic_auth => {
-          :username => @cms_config["site_settings"]["google_merchant_id"],
-          :password => @cms_config["site_settings"]["google_merchant_key"]
-        } 
-      }
-      #post_url = "https://#{@cms_config["site_settings"]["google_merchant_id"]}:#{@cms_config["site_settings"]["google_merchant_key"]}@checkout.google.com/api/checkout/v2/request/Merchant/#{@cms_config["site_settings"]["google_merchant_id"]}/diagnose"
-      response = HTTParty.post(post_url, options)
-
-      redirect_url = URI.decode(response.parsed_response).strip.gsub(/_type=checkout-redirect&redirect-url=(.{0,}?)\z/,'\1')
-      
-      # Need to save serial number that comes back from the order and get person info 
-      # Person.find_or_create_by_email
-      redirect_to(redirect_url)
+    redirect_url = URI.decode(response.parsed_response).strip.gsub(/_type=checkout-redirect&redirect-url=(.{0,}?)\z/,'\1')
+    
+    # Need to save serial number that comes back from the order and get person info 
+    # Person.find_or_create_by_email
+    redirect_to(redirect_url)
     else
       flash[:error] = "Please enter a valid donation amount"
       redirect_to(products_path)
