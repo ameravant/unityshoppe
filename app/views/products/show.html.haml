@@ -8,8 +8,6 @@
     ==<script type='text/javascript'>function option_switch (price, option) {if(price != ''){jQuery('.product-price').val(price);}jQuery('.product-attr-option').val(option); return false;}</script>
 
 %h1= @product.title
-%h2
-  Description
 = @product.description
 
 = render :partial => "/shared/image_box", :locals => { :owner => @product } unless @product.images.empty?
@@ -18,9 +16,9 @@
     %div{:class => "add-to-cart product"}
       = hidden_field_tag "product-title", @product.title, {:class => "product-title"}
       = hidden_field_tag "product-attr-option", @product.product_options[0].title ? @product.product_options[0].title : nil, {:class => "product-attr-option"}
-      %h3= "Donation Amount"
-      = text_field_tag "product-price","", {:class => "product-price"}
-      %h3= "Donation Options"
+      = label_tag "product-price", "Donation Amount"
+      == $#{text_field_tag "product-price","", {:class => "product-price"}}
+      %br
       = label_tag "anonymous", "I would like to remain anonymous"
       = check_box_tag "anonymous"
       
