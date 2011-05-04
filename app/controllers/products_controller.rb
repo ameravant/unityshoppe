@@ -121,6 +121,35 @@ class ProductsController < ApplicationController
       end
     end
   end
+  
+  def add_to_cart
+    begin
+      @product = Product.find params[:id], :conditions => { :active => true, :deleted => false }
+      find_cart.add_product(@product, 1)
+      redirect_to cart_path
+    rescue ActiveRecord::RecordNotFound
+      flash[:error] = "That product is not available."
+      redirect_to products_path
+    end
+  end
+
+  private
+
+  def find_page
+    @footer_pages = Page.find(:all, :conditions => {:show_in_footer => true}, :order => :footer_pos )
+    @page = Page.find_by_permalink!('donations')
+    @productcategories = ProductCategory.all
+    @topproductcategories = ProductCategory.all(:conditions => {:parent_id => nil})
+    # @product_category_tmp = []
+    #     build_tree(@product_category)
+    #     for product_category in @product_category_tmp.reverse
+    #       unless product_category == @product_category
+    #         add_breadcrumb product_category.title, product_category_path(product_category)
+    #       else  
+    #         add_breadcrumb product_category.title
+    #       end
+    #     end
+  end
 
   def find_cart
     session[:cart] ||= Cart.new
