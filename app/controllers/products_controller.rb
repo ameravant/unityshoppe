@@ -49,18 +49,39 @@ class ProductsController < ApplicationController
   end
   
   def google_post
-    if !params["product-price"].blank?
-    google_params = { "_type"=>"checkout-shopping-cart", "shopping-cart.items.item-1.item-name" => params["anonymous"] ? params["product-attr-option"]+"-anonymous" : params["product-attr-option"], "shopping-cart.items.item-1.item-description" => params["product-title"],"shopping-cart.items.item-1.unit-price" => params["product-price"], "shopping-cart.items.item-1.unit-price.currency" => "USD","shopping-cart.items.item-1.quantity" => "1","shopping-cart.items.item-1.merchant-item-id" =>"UNITYDONATION"}
-    base_uri = @cms_config["site_settings"]["google_sandbox"] ? 'https://sandbox.google.com' : 'https://google.com'
-    headers = {'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8'}
-    options = { :body => google_params, :headers => headers , :basic_auth => {:username => @cms_config["site_settings"]["google_merchant_id"],:password => @cms_config["site_settings"]["google_merchant_key"]}}
-    response = HTTParty.post(base_uri+"/checkout/api/checkout/v2/requestForm/Merchant/#{@cms_config["site_settings"]["google_merchant_id"]}", options)
+    if params["product-price"].match(/^[\d]*(\.[\d]{1,2})?$/)
+      google_params = { 
+        '_type' => 'checkout-shopping-cart', 
+        'shopping-cart.items.item-1.item-name' => params['anonymous'] ? params['product-attr-option']+'-anonymous' : params['product-attr-option'], 
+        'shopping-cart.items.item-1.item-description' => params['product-title'],
+        'shopping-cart.items.item-1.unit-price' => params['product-price'], 
+        'shopping-cart.items.item-1.unit-price.currency' => 'USD',
+        'shopping-cart.items.item-1.quantity' => '1',
+        'shopping-cart.items.item-1.merchant-item-id' =>'UNITYDONATION'
+        }
+      site_settings = @cms_config["site_settings"]
+      google_merchant_id = site_settings['google_merchant_id']
+      if site_settings['google_sandbox']
+        post_url = "https://sandbox.google.com/checkout/api/checkout/v2/requestForm/Merchant/#{google_merchant_id}"
+      else
+        post_url = "https://checkout.google.com/api/checkout/v2/requestForm/Merchant/#{google_merchant_id}"
+      end
 
-    redirect_url = URI.decode(response.parsed_response).strip.gsub(/_type=checkout-redirect&redirect-url=(.{0,}?)\z/,'\1')
-    
-    # Need to save serial number that comes back from the order and get person info 
-    # Person.find_or_create_by_email
-    redirect_to(redirect_url)
+      headers = { 'Content-Type' => 'application/xml;charset=UTF-8', 'Accept' => 'application/xml;charset=UTF-8' }
+      options = { :body => google_params, :headers => headers, 
+        :basic_auth => {
+          :username => @cms_config["site_settings"]["google_merchant_id"],
+          :password => @cms_config["site_settings"]["google_merchant_key"]
+        } 
+      }
+      #post_url = "https://#{@cms_config["site_settings"]["google_merchant_id"]}:#{@cms_config["site_settings"]["google_merchant_key"]}@checkout.google.com/api/checkout/v2/request/Merchant/#{@cms_config["site_settings"]["google_merchant_id"]}/diagnose"
+      response = HTTParty.post(post_url, options)
+
+      redirect_url = URI.decode(response.parsed_response).strip.gsub(/_type=checkout-redirect&redirect-url=(.{0,}?)\z/,'\1')
+      
+      # Need to save serial number that comes back from the order and get person info 
+      # Person.find_or_create_by_email
+      redirect_to(redirect_url)
     else
       flash[:error] = "Please enter a valid donation amount"
       redirect_to(products_path)
@@ -99,35 +120,6 @@ class ProductsController < ApplicationController
         logger.info "Created person #{person.id}"
       end
     end
-  end
-  
-  def add_to_cart
-    begin
-      @product = Product.find params[:id], :conditions => { :active => true, :deleted => false }
-      find_cart.add_product(@product, 1)
-      redirect_to cart_path
-    rescue ActiveRecord::RecordNotFound
-      flash[:error] = "That product is not available."
-      redirect_to products_path
-    end
-  end
-
-  private
-
-  def find_page
-    @footer_pages = Page.find(:all, :conditions => {:show_in_footer => true}, :order => :footer_pos )
-    @page = Page.find_by_permalink!('donations')
-    @productcategories = ProductCategory.all
-    @topproductcategories = ProductCategory.all(:conditions => {:parent_id => nil})
-    # @product_category_tmp = []
-    #     build_tree(@product_category)
-    #     for product_category in @product_category_tmp.reverse
-    #       unless product_category == @product_category
-    #         add_breadcrumb product_category.title, product_category_path(product_category)
-    #       else  
-    #         add_breadcrumb product_category.title
-    #       end
-    #     end
   end
 
   def find_cart
